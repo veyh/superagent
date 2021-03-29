@@ -19,6 +19,7 @@ const debug = require('debug')('superagent');
 const CookieJar = require('cookiejar');
 const semver = require('semver');
 const safeStringify = require('fast-safe-stringify');
+const stackTrace = require('stack-trace');
 
 const utils = require('../utils');
 const RequestBase = require('../request-base');
@@ -148,6 +149,8 @@ function _initHeaders(req) {
  */
 
 function Request(method, url) {
+  this._originalStack = stackTrace.get();
+
   Stream.call(this);
   if (typeof url !== 'string') url = format(url);
   this._enableHttp2 = Boolean(process.env.HTTP2_TEST); // internal only

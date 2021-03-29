@@ -961,4 +961,14 @@ describe('request', function () {
       }
     });
   });
+
+  it('preserves async stack traces', async () => {
+    try {
+      await request.get(`${uri}/error`);
+    }
+
+    catch (err) {
+      assert(err.stack.match(__filename));
+    }
+  });
 });

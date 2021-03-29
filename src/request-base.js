@@ -1,3 +1,5 @@
+const longjohn = require('longjohn');
+
 /**
  * Module of mixed-in functions shared between node and client code
  */
@@ -284,6 +286,7 @@ RequestBase.prototype._retry = function () {
 RequestBase.prototype.then = function (resolve, reject) {
   if (!this._fullfilledPromise) {
     const self = this;
+
     if (this._endCalled) {
       console.warn(
         'Warning: superagent request was sent twice, because both .end() and .then() were called. Never call .end() if you use promises'
@@ -297,7 +300,7 @@ RequestBase.prototype.then = function (resolve, reject) {
         }
 
         if (this.timedout && this.timedoutError) {
-          reject(this.timedoutError);
+          this._rejectWithOriginalStack(reject, this.timedoutError);
           return;
         }
 
@@ -306,16 +309,29 @@ RequestBase.prototype.then = function (resolve, reject) {
         err.status = this.status;
         err.method = this.method;
         err.url = this.url;
-        reject(err);
+        this._rejectWithOriginalStack(reject, err);
       });
       self.end((err, res) => {
-        if (err) reject(err);
+        if (err) this._rejectWithOriginalStack(reject, err);
         else resolve(res);
       });
     });
   }
 
   return this._fullfilledPromise.then(resolve, reject);
+};
+
+RequestBase.prototype._rejectWithOriginalStack = function (reject, err) {
+  if (this._originalStack) {
+    const extraStack = this._originalStack
+      .slice(3)
+      .map(call => `    at ${call.toString()}`)
+      .join("\n");
+
+    err.stack = [err.stack, longjohn.empty_frame, extraStack].join("\n");
+  }
+
+  return reject(err);
 };
 
 RequestBase.prototype.catch = function (cb) {
