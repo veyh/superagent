@@ -1,5 +1,3 @@
-const longjohn = require('longjohn');
-
 /**
  * Module of mixed-in functions shared between node and client code
  */
@@ -328,7 +326,7 @@ RequestBase.prototype._rejectWithOriginalStack = function (reject, err) {
       .map(call => `    at ${call.toString()}`)
       .join("\n");
 
-    err.stack = [err.stack, longjohn.empty_frame, extraStack].join("\n");
+    err.stack = [err.stack, '-------------------', extraStack].join('\n');
   }
 
   return reject(err);
